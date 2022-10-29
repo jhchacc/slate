@@ -25,21 +25,7 @@
 
 @implementation ThrowOperation
 
-- (NSArray *)requiredOptions {
-  return [NSArray arrayWithObjects:OPT_SCREEN, nil];
-}
-
-- (void)beforeInitOptions {
-  // throw is basically an alias for move with some reasonable defaults for x, y, width, and height
-  [self setTopLeft:[[ExpressionPoint alloc] initWithX:@"screenOriginX" y:@"screenOriginY"]];
-  [self setDimensions:[[ExpressionPoint alloc] initWithX:@"windowSizeX" y:@"windowSizeY"]];
-}
-
-+ (id)throwOperation {
-  return [[ThrowOperation alloc] init];
-}
-
-+ (id)throwOperationFromString:(NSString *)throwOperation {
++ (id)throwOperation:(NSString *)throwOperation {
   // throw <monitor> <optional:style (default is noresize)>
   NSMutableArray *tokens = [[NSMutableArray alloc] initWithCapacity:10];
   [StringTokenizer tokenize:throwOperation into:tokens];
@@ -66,7 +52,7 @@
       @throw([NSException exceptionWithName:@"Unrecognized Style" reason:[NSString stringWithFormat:@"Unrecognized style '%@' in '%@'", style, throwOperation] userInfo:nil]);
     }
   }
-  Operation *op = [[MoveOperation alloc] initWithTopLeft:tl dimensions:dim monitor:[tokens objectAtIndex:1]];
+  Operation *op = [[MoveOperation alloc] init:tl dimensions:dim monitor:[tokens objectAtIndex:1]];
   return op;
 }
 

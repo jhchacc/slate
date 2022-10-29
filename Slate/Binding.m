@@ -24,9 +24,7 @@
 #import "StringTokenizer.h"
 #import "SlateLogger.h"
 #import "Operation.h"
-#import "SwitchOperation.h"
 #import "SlateAppDelegate.h"
-#import "SnapshotOperation.h"
 
 @implementation Binding
 
@@ -35,16 +33,12 @@
 @synthesize modifiers;
 @synthesize modalKey;
 @synthesize hotKeyRef;
-@synthesize repeat;
-@synthesize toggle;
 
 static NSDictionary *dictionary = nil;
 
 - (id)init {
   self = [super init];
   if (self) {
-    [self setRepeat:NO];
-    [self setToggle:NO];
     [self setModalKey:nil];
   }
   return self;
@@ -60,57 +54,23 @@ static NSDictionary *dictionary = nil;
     if ([tokens count] <=2) {
       @throw([NSException exceptionWithName:@"Unrecognized Bind" reason:binding userInfo:nil]);
     }
-    [self setKeystrokeFromString:[tokens objectAtIndex:1]];
-    [self setOperationAndRepeatFromString:[tokens objectAtIndex:2]];
+    [self setKeystroke:[tokens objectAtIndex:1]];
+    [self setOperation:[tokens objectAtIndex:2]];
   }
 
   return self;
 }
 
-- (id)initWithKeystroke:(NSString *)keystroke operation:(Operation *)op_ repeat:(BOOL)repeat_ {
-  self = [self init];
-  if (self) {
-    [self setKeystrokeFromString:keystroke];
-    [self setOp:op_];
-    if ([self op] == nil) {
-      SlateLogger(@"ERROR: Unable to create binding");
-      @throw([NSException exceptionWithName:@"Unable To Create Binding" reason:[NSString stringWithFormat:@"Unable to create %@", keystroke] userInfo:nil]);
-    }
-
-    @try {
-      AccessibilityWrapper *awTest = [[AccessibilityWrapper alloc] init];
-      ScreenWrapper *swTest = [[ScreenWrapper alloc] init];
-      [[self op] testOperationWithAccessibilityWrapper:awTest screenWrapper:swTest];
-    } @catch (NSException *ex) {
-      SlateLogger(@"ERROR: Unable to test binding");
-      @throw([NSException exceptionWithName:@"Unable To Parse Binding" reason:[NSString stringWithFormat:@"Unable to parse '%@' in '%@'", [ex reason], [[self op] opName]] userInfo:nil]);
-    }
-    if ([[self op] isKindOfClass:[SwitchOperation class]]) {
-      [(SwitchOperation *)op setModifiers:modifiers];
-    }
-    [self setRepeat:repeat_];
-  }
-  return self;
++ (UInt32)getModifierKey:(NSString *)mod {
+  if ([mod isEqualToString:CONTROL]) { return controlKey; }
+  if ([mod isEqualToString:OPTION]) { return optionKey; }
+  if ([mod isEqualToString:COMMAND]) { return cmdKey; }
+  if ([mod isEqualToString:SHIFT]) { return shiftKey; }
+  if ([mod isEqualToString:FUNCTION]) { return FUNCTION_KEY; }
+  @throw([NSException exceptionWithName:@"Unrecognized Modifier" reason:[NSString stringWithFormat:@"'%@'", mod] userInfo:nil]);
 }
 
-+ (UInt32)modifierFromString:(NSString *)mod {
-  if ([mod isEqualToString:CONTROL]) {
-    return controlKey;
-  } else if ([mod isEqualToString:OPTION]) {
-    return optionKey;
-  } else if ([mod isEqualToString:COMMAND]) {
-    return cmdKey;
-  } else if ([mod isEqualToString:SHIFT]) {
-   return shiftKey;
-  } else if ([mod isEqualToString:FUNCTION]) {
-    return FUNCTION_KEY;
-  } else {
-    SlateLogger(@"ERROR: Unrecognized modifier '%@'", mod);
-    @throw([NSException exceptionWithName:@"Unrecognized Modifier" reason:[NSString stringWithFormat:@"Unrecognized modifier '%@'", mod] userInfo:nil]);
-  }
-}
-
-+ (NSArray *)getKeystrokeFromString:(NSString *)keystroke {
++ (NSArray *)getKeystroke:(NSString *)keystroke {
   NSNumber *theKeyCode = [NSNumber numberWithUnsignedInt:0];
   UInt32 theModifiers = 0;
   NSNumber *theModalKey = nil;
@@ -134,7 +94,7 @@ static NSDictionary *dictionary = nil;
           if (_theModalKey != nil) {
             theModalKey = _theModalKey;
           } else {
-            theModifiers += [Binding modifierFromString:mod];
+            theModifiers += [Binding getModifierKey:mod];
           }
           mod = [modEnum nextObject];
         }
@@ -144,30 +104,23 @@ static NSDictionary *dictionary = nil;
   return [NSArray arrayWithObjects:theKeyCode, [NSNumber numberWithInteger:theModifiers], theModalKey, nil];
 }
 
-- (void)setKeystrokeFromString:(NSString*)keystroke {
+- (void)setKeystroke:(NSString*)keystroke {
   NSArray *modalAndKey = [keystroke componentsSeparatedByString:COLON];
   if ([modalAndKey count] > 0) {
-    NSArray *keyarr = [Binding getKeystrokeFromString:keystroke];
+    NSArray *keyarr = [Binding getKeystroke:keystroke];
     keyCode = [[keyarr objectAtIndex:0] unsignedIntValue];
     modifiers = [[keyarr objectAtIndex:1] unsignedIntValue];
     if ([keyarr count] >= 3 ) {
       [self setModalKey:[keyarr objectAtIndex:2]];
     }
   }
-  if ([modalAndKey count] >= 3){ // modal toggle
-    if ([[modalAndKey objectAtIndex:2] isEqualToString:TOGGLE]) {
-      [self setToggle:YES];
-    }
-  }
 }
 
-- (void)setOperationAndRepeatFromString:(NSString*)token {
+- (void)setOperation:(NSString*)token {
   NSMutableString *opStr = [[NSMutableString alloc] initWithCapacity:10];
   [StringTokenizer firstToken:token into:opStr];
-  BOOL theRepeat = [Operation isRepeatOnHoldOp:opStr];
 
-  Operation *theOp = [Operation operationFromString:token];
-
+  Operation *theOp = [Operation operation:token];
   if (theOp == nil) {
     SlateLogger(@"ERROR: Unable to create binding");
     @throw([NSException exceptionWithName:@"Unable To Create Binding" reason:[NSString stringWithFormat:@"Unable to create '%@'", token] userInfo:nil]);
@@ -180,31 +133,11 @@ static NSDictionary *dictionary = nil;
     @throw([NSException exceptionWithName:@"Unable To Parse Binding" reason:[NSString stringWithFormat:@"Unable to parse '%@' in '%@'", [ex reason], token] userInfo:nil]);
   }
 
-  if ([theOp isKindOfClass:[SwitchOperation class]]) {
-    [(SwitchOperation *)op setModifiers:modifiers];
-  }
-
   op = theOp;
-  repeat = theRepeat;
 }
 
 - (BOOL)doOperation {
-  if ([(SlateAppDelegate *)[NSApp delegate] hasUndoOperation] && [op shouldTakeUndoSnapshot]) {
-    [[(SlateAppDelegate *)[NSApp delegate] undoSnapshotOperation] doOperation];
-  }
-  @try {
-    return [op doOperation];
-  } @catch (NSException *ex) {
-    SlateLogger(@"   ERROR %@",[ex name]);
-    NSAlert *alert = [SlateConfig warningAlertWithKeyEquivalents: [NSArray arrayWithObjects:@"Quit", @"Skip", nil]];
-    [alert setMessageText:[ex name]];
-    [alert setInformativeText:[ex reason]];
-    if ([alert runModal] == NSAlertFirstButtonReturn) {
-      SlateLogger(@"User selected exit");
-      [NSApp terminate:nil];
-    }
-  }
-  return NO;
+  return [op doOperation];
 }
 
 - (NSString *)modalHashKey {

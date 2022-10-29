@@ -22,7 +22,6 @@
 
 @interface ThrowOperation : MoveOperation
 
-+ (id)throwOperation;
-+ (id)throwOperationFromString:(NSString *)throwOperation;
++ (id)throwOperation:(NSString *)throwOperation;
 
 @end

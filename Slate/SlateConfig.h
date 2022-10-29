@@ -19,7 +19,6 @@
 //  along with this program.  If not, see http://www.gnu.org/licenses
 
 #import <Foundation/Foundation.h>
-#import "Snapshot.h"
 
 @class Binding;
 
@@ -29,31 +28,21 @@
   NSMutableDictionary *configDefaults;
   NSMutableArray *bindings;
   NSMutableDictionary *modalBindings;
-  NSMutableDictionary *layouts;
-  NSMutableArray *defaultLayouts;
   NSMutableDictionary *aliases;
-  NSMutableDictionary *snapshots;
 }
-
 @property NSMutableDictionary *configs;
 @property NSMutableDictionary *configDefaults;
 @property NSMutableDictionary *appConfigs; // two layer map
 @property NSMutableArray *bindings;
 @property NSMutableDictionary *modalBindings;
-@property NSMutableDictionary *layouts;
-@property NSMutableArray *defaultLayouts;
 @property NSMutableDictionary *aliases;
-@property NSMutableDictionary *snapshots;
 
 + (SlateConfig *)getInstance;
 + (NSAlert *)warningAlertWithKeyEquivalents:(NSArray *)titles;
 - (BOOL)load;
 - (BOOL)loadConfigFileWithPath:(NSString *)file;
-- (BOOL)addLayout:(NSString *)name dict:(NSDictionary *)dict;
-- (void)addDefault:(id)screenConfig layout:(NSString *)layout;
 - (void)addBinding:(Binding *)bind;
 - (BOOL)append:(NSString *)configString;
-- (BOOL)loadSnapshots;
 - (BOOL)getBoolConfig:(NSString *)key;
 - (void)setConfig:(NSString *)key to:(NSString *)value;
 - (NSInteger)getIntegerConfig:(NSString *)key;
@@ -67,14 +56,8 @@
 - (NSString *)replaceAliases:(NSString *)line;
 - (void)onScreenChange:(id)notification;
 - (void)setupDefaultConfigs;
-- (void)addSnapshot:(Snapshot *)snapshot name:(NSString *)name saveToDisk:(BOOL)saveToDisk isStack:(BOOL)isStack stackSize:(NSUInteger)stackSize;
-- (void)deleteSnapshot:(NSString *)name pop:(BOOL)pop;
-- (Snapshot *)popSnapshot:(NSString *)name remove:(BOOL)remove;
-- (void)activateLayoutOrSnapshot:(NSString *)name;
 - (NSString *)stripComments:(NSString *)line;
 //- (void)processNotification:(id)notification;
-
-+ (NSURL *)snapshotsFile;
 
 @end
 

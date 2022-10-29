@@ -57,15 +57,12 @@
   for (NSRunningApplication *app in [RunningApplications getInstance]) {
     NSString *appName = [app localizedName];
     pid_t appPID = [app processIdentifier];
-    SlateLogger(@"I see application '%@' with pid '%d'", appName, appPID);
     text = [text stringByAppendingFormat:@"\nApplication: %@\n", appName];
-    // Yes, I am aware that the following blocks are inefficient. Deal with it.
     AXUIElementRef appRef = AXUIElementCreateApplication(appPID);
     CFArrayRef windowsArrRef = [AccessibilityWrapper windowsInApp:appRef];
     if (!windowsArrRef || CFArrayGetCount(windowsArrRef) == 0) continue;
     CFMutableArrayRef windowsArr = CFArrayCreateMutableCopy(kCFAllocatorDefault, 0, windowsArrRef);
     for (NSInteger i = 0; i < CFArrayGetCount(windowsArr); i++) {
-      SlateLogger(@" Printing Window: %@", [AccessibilityWrapper getTitle:CFArrayGetValueAtIndex(windowsArr, i)]);
       NSString *title = [AccessibilityWrapper getTitle:CFArrayGetValueAtIndex(windowsArr, i)];
       if ([title isEqualToString:@""]) continue;
       AccessibilityWrapper *aw = [[AccessibilityWrapper alloc] initWithApp:appRef window:CFArrayGetValueAtIndex(windowsArr, i)];

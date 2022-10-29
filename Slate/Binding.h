@@ -30,8 +30,6 @@
   UInt32 modifiers;
   NSNumber *modalKey;
   EventHotKeyRef hotKeyRef;
-  BOOL repeat;
-  BOOL toggle;
 }
 
 @property  Operation *op;
@@ -39,12 +37,9 @@
 @property (assign) UInt32 modifiers;
 @property NSNumber *modalKey;
 @property (assign) EventHotKeyRef hotKeyRef;
-@property (assign) BOOL repeat;
-@property (assign) BOOL toggle;
 
 + (NSDictionary *)asciiToCodeDict;
 - (id)initWithString:(NSString *)binding;
-- (id)initWithKeystroke:(NSString*)keystroke operation:(Operation*)op_ repeat:(BOOL)repeat_;
 - (BOOL)doOperation;
 - (NSString *)modalHashKey;
 + (NSArray *)modalHashKeyToKeyAndModifiers:(NSString *)modalHashKey;

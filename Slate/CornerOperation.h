@@ -22,7 +22,6 @@
 
 @interface CornerOperation : MoveOperation
 
-+ (id)cornerOperation;
-+ (id)cornerOperationFromString:(NSString *)cornerOperation;
++ (id)cornerOperation:(NSString *)cornerOperation;
 
 @end

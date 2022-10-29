@@ -25,39 +25,7 @@
 
 @implementation CornerOperation
 
-- (NSArray *)requiredOptions {
-  return [NSArray arrayWithObjects:OPT_DIRECTION, nil];
-}
-
-- (void)afterEvalOptions {
-  NSString *width = [[self options] objectForKey:OPT_WIDTH];
-  if (width == nil) { width = @"windowSizeX"; }
-  NSString *height = [[self options] objectForKey:OPT_HEIGHT];
-  if (height == nil) { height = @"windowSizeY"; }
-  [self setDimensions:[[ExpressionPoint alloc] initWithX:width y:height]];
-  NSString *screen = [[self options] objectForKey:OPT_SCREEN];
-  if (screen == nil) { screen = REF_CURRENT_SCREEN; }
-  [self setMonitor:screen];
-  NSString *direction = [[self options] objectForKey:OPT_DIRECTION];
-  if ([direction isEqualToString:TOP_LEFT]) {
-    [self setTopLeft:[[ExpressionPoint alloc] initWithX:@"screenOriginX" y:@"screenOriginY"]];
-  } else if ([direction isEqualToString:TOP_RIGHT]) {
-    [self setTopLeft:[[ExpressionPoint alloc] initWithX:[NSString stringWithFormat:@"screenOriginX+screenSizeX-(%@)", [[self dimensions] x]] y:@"screenOriginY"]];
-  } else if ([direction isEqualToString:BOTTOM_LEFT]) {
-    [self setTopLeft:[[ExpressionPoint alloc] initWithX:@"screenOriginX" y:[NSString stringWithFormat:@"screenOriginY+screenSizeY-(%@)", [[self dimensions] y]]]];
-  } else if ([direction isEqualToString:BOTTOM_RIGHT]) {
-    [self setTopLeft:[[ExpressionPoint alloc] initWithX:[NSString stringWithFormat:@"screenOriginX+screenSizeX-(%@)", [[self dimensions] x]] y:[NSString stringWithFormat:@"screenOriginY+screenSizeY-(%@)", [[self dimensions] y]]]];
-  } else {
-    SlateLogger(@"ERROR: Unrecognized corner '%@'", direction);
-    @throw([NSException exceptionWithName:@"Unrecognized Corner" reason:[NSString stringWithFormat:@"Unrecognized corner '%@'", direction] userInfo:nil]);
-  }
-}
-
-+ (id)cornerOperation {
-  return [[CornerOperation alloc] init];
-}
-
-+ (id)cornerOperationFromString:(NSString *)cornerOperation {
++ (id)cornerOperation:(NSString *)cornerOperation {
   // corner <top-left|top-right|bottom-left|bottom-right> <optional:resize:expression> <optional:monitor>
   NSMutableArray *tokens = [[NSMutableArray alloc] initWithCapacity:10];
   [StringTokenizer tokenize:cornerOperation into:tokens];
@@ -91,7 +59,7 @@
     @throw([NSException exceptionWithName:@"Unrecognized Corner" reason:[NSString stringWithFormat:@"Unrecognized corner '%@' in '%@'", direction, cornerOperation] userInfo:nil]);
   }
 
-  Operation *op = [[MoveOperation alloc] initWithTopLeft:tl dimensions:dim monitor:([tokens count] >=4 ? [tokens objectAtIndex:3] : REF_CURRENT_SCREEN)];
+  Operation *op = [[MoveOperation alloc] init:tl dimensions:dim monitor:([tokens count] >=4 ? [tokens objectAtIndex:3] : REF_CURRENT_SCREEN)];
   return op;
 }
 

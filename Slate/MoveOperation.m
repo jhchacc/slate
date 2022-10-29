@@ -33,74 +33,33 @@
 @synthesize monitor;
 @synthesize screenId;
 
-- (id)init {
-  self = [super init];
-  if (self) {
-    [self setTopLeft:[[ExpressionPoint alloc] initWithX:@"" y:@""]];
-    [self setDimensions:[[ExpressionPoint alloc] initWithX:@"" y:@""]];
-    [self setMonitor:REF_CURRENT_SCREEN];
-    [self setScreenId:-1];
-  }
-  return self;
-}
-
-- (id)initWithTopLeft:(NSString *)tl dimensions:(NSString *)dim monitor:(NSString *)mon {
+- (id)init:(NSString *)tl dimensions:(NSString *)dim monitor:(NSString *)mon {
   self = [self init];
-  if (self) {
-    NSArray *tlTokens = [tl componentsSeparatedByString:SEMICOLON];
+  NSArray *tlTokens = [tl componentsSeparatedByString:SEMICOLON];
+  if ([tlTokens count] == 2) {
+    [self setTopLeft:[[ExpressionPoint alloc] initWithX:[tlTokens objectAtIndex:0] y:[tlTokens objectAtIndex:1]]];
+  } else {
+    tlTokens = [tl componentsSeparatedByString:COMMA];
     if ([tlTokens count] == 2) {
       [self setTopLeft:[[ExpressionPoint alloc] initWithX:[tlTokens objectAtIndex:0] y:[tlTokens objectAtIndex:1]]];
     } else {
-      tlTokens = [tl componentsSeparatedByString:COMMA];
-      if ([tlTokens count] == 2) {
-        [self setTopLeft:[[ExpressionPoint alloc] initWithX:[tlTokens objectAtIndex:0] y:[tlTokens objectAtIndex:1]]];
-      } else {
-        return nil;
-      }
+      return nil;
     }
-    NSArray *dimTokens = [dim componentsSeparatedByString:SEMICOLON];
+  }
+  NSArray *dimTokens = [dim componentsSeparatedByString:SEMICOLON];
+  if ([dimTokens count] == 2) {
+    [self setDimensions:[[ExpressionPoint alloc] initWithX:[dimTokens objectAtIndex:0] y:[dimTokens objectAtIndex:1]]];
+  } else {
+    dimTokens = [dim componentsSeparatedByString:COMMA];
     if ([dimTokens count] == 2) {
-      [self setDimensions:[[ExpressionPoint alloc] initWithX:[dimTokens objectAtIndex:0] y:[dimTokens objectAtIndex:1]]];
+      [self setDimensions:[[ExpressionPoint alloc] initWithX:[dimTokens objectAtIndex:0] y:[dimTokens objectAtIndex:1]] ];
     } else {
-      dimTokens = [dim componentsSeparatedByString:COMMA];
-      if ([dimTokens count] == 2) {
-        [self setDimensions:[[ExpressionPoint alloc] initWithX:[dimTokens objectAtIndex:0] y:[dimTokens objectAtIndex:1]] ];
-      } else {
-        return nil;
-      }
+      return nil;
     }
-    [self setMonitor:mon];
-    [self setScreenId:-1];
   }
-
+  [self setMonitor:mon];
+  [self setScreenId:-1];
   return self;
-}
-
-- (id)initWithTopLeftEP:(ExpressionPoint *)tl dimensionsEP:(ExpressionPoint *)dim screenId:(NSInteger)myScreenId {
-  self = [self init];
-  if (self) {
-    [self setTopLeft:tl];
-    [self setDimensions:dim];
-    [self setScreenId:myScreenId];
-    [self setMonitor:nil];
-  }
-
-  return self;
-}
-
-- (BOOL)doOperationWithAccessibilityWrapper:(AccessibilityWrapper *)aw screenWrapper:(ScreenWrapper *)sw {
-  BOOL success = NO;
-  [self evalOptionsWithAccessibilityWrapper:aw screenWrapper:sw];
-  NSPoint cTopLeft = [aw getCurrentTopLeft];
-  NSSize cSize = [aw getCurrentSize];
-  NSRect cWindowRect = NSMakeRect(cTopLeft.x, cTopLeft.y, cSize.width, cSize.height);
-  NSSize nSize = [self getDimensionsWithCurrentWindowRect:cWindowRect screenWrapper:sw];
-  success = [aw resizeWindow:nSize];
-  NSSize realNewSize = [aw getCurrentSize];
-  NSPoint nTopLeft = [self getTopLeftWithCurrentWindowRect:cWindowRect newSize:realNewSize screenWrapper:sw];
-  success = [aw moveWindow:nTopLeft] && success;
-  success = [aw resizeWindow:nSize] && success;
-  return success;
 }
 
 - (BOOL)doOperation {
@@ -108,7 +67,17 @@
   AccessibilityWrapper *aw = [[AccessibilityWrapper alloc] init];
   ScreenWrapper *sw = [[ScreenWrapper alloc] init];
   BOOL success = NO;
-  if ([aw inited]) success = [self doOperationWithAccessibilityWrapper:aw screenWrapper:sw];
+  if ([aw inited]) {
+    NSPoint cTopLeft = [aw getCurrentTopLeft];
+    NSSize cSize = [aw getCurrentSize];
+    NSRect cWindowRect = NSMakeRect(cTopLeft.x, cTopLeft.y, cSize.width, cSize.height);
+    NSSize nSize = [self getDimensionsWithCurrentWindowRect:cWindowRect screenWrapper:sw];
+    success = [aw resizeWindow:nSize];
+    NSSize realNewSize = [aw getCurrentSize];
+    NSPoint nTopLeft = [self getTopLeftWithCurrentWindowRect:cWindowRect newSize:realNewSize screenWrapper:sw];
+    success = [aw moveWindow:nTopLeft] && success;
+    success = [aw resizeWindow:nSize] && success;
+  }
   SlateLogger(@"-----------------  End Move Operation  -----------------");
   return success;
 }
@@ -173,11 +142,7 @@
   }
 }
 
-+ (id)moveOperation {
-  return [[MoveOperation alloc] init];
-}
-
-+ (id)moveOperationFromString:(NSString *)moveOperation {
++ (id)moveOperation:(NSString *)moveOperation {
   // move <topLeft> <dimensions> <optional:monitor>
   NSMutableArray *tokens = [[NSMutableArray alloc] initWithCapacity:10];
   [StringTokenizer tokenize:moveOperation into:tokens];
@@ -188,7 +153,7 @@
   }
 
   Operation *op = nil;
-  op = [[MoveOperation alloc] initWithTopLeft:[tokens objectAtIndex:1] dimensions:[tokens objectAtIndex:2] monitor:([tokens count] >=4 ? [tokens objectAtIndex:3] : REF_CURRENT_SCREEN)];
+  op = [[MoveOperation alloc] init:[tokens objectAtIndex:1] dimensions:[tokens objectAtIndex:2] monitor:([tokens count] >=4 ? [tokens objectAtIndex:3] : REF_CURRENT_SCREEN)];
   return op;
 }
 

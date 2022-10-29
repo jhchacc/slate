@@ -36,12 +36,10 @@
 @property NSString *monitor;
 @property NSInteger screenId;
 
-- (id)initWithTopLeft:(NSString *)tl dimensions:(NSString *)dim monitor:(NSString *)mon;
-- (id)initWithTopLeftEP:(ExpressionPoint *)tl dimensionsEP:(ExpressionPoint *)dim screenId:(NSInteger)myScreenId;
+- (id)init:(NSString *)tl dimensions:(NSString *)dim monitor:(NSString *)mon;
 - (NSPoint)getTopLeftWithCurrentWindowRect:(NSRect)cWindowRect newSize:(NSSize)nSize screenWrapper:(ScreenWrapper *)sw;
 - (NSSize)getDimensionsWithCurrentWindowRect:(NSRect)cWindowRect screenWrapper:(ScreenWrapper *)sw;
 
-+ (id)moveOperation;
-+ (id)moveOperationFromString:(NSString *)moveOperation;
++ (id)moveOperation:(NSString *)moveOperation;
 
 @end

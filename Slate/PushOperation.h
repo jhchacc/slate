@@ -22,7 +22,6 @@
 
 @interface PushOperation : MoveOperation
 
-+ (id)pushOperation;
-+ (id)pushOperationFromString:(NSString *)pushOperation;
++ (id)pushOperation:(NSString *)pushOperation;
 
 @end

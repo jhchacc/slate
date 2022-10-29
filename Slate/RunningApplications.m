@@ -22,9 +22,6 @@
 #import "SlateLogger.h"
 #import "AccessibilityWrapper.h"
 #import "Constants.h"
-#import "JSController.h"
-#import "JSWindowWrapper.h"
-#import "JSApplicationWrapper.h"
 #import "SlateConfig.h"
 
 @implementation RunningApplications
@@ -65,14 +62,6 @@ static NSString *prettyifyEventName(NSString *event) {
   return [eventNameDict objectForKey:event];
 }
 
-static void runWindowJSCallbacks(AXUIElementRef element, CFStringRef notification) {
-  // Run any js callbacks
-  AccessibilityWrapper *openedWindow = [[AccessibilityWrapper alloc] initWithApp:[AccessibilityWrapper applicationForElement:element] window:element];
-  NSString *eventName = prettyifyEventName([NSString stringWithFormat:@"%@", notification]);
-  [[JSController getInstance] runCallbacks:eventName
-                                   payload:[[JSWindowWrapper alloc] initWithAccessibilityWrapper:openedWindow screenWrapper:[[ScreenWrapper alloc] init]]];
-}
-
 static void windowChanged(AXObserverRef observer, AXUIElementRef element, CFStringRef notification, void *refcon) {
   RunningApplications *ref = (__bridge RunningApplications *)refcon;
   SlateLogger(@">> WINDOW CHANGED, %@ <<", notification);
@@ -83,9 +72,6 @@ static void windowChanged(AXObserverRef observer, AXUIElementRef element, CFStri
     AXObserverRemoveNotification(observer, element, kAXResizedNotification);
     [ref pruneWindows];
   }
-  NSString *eventName = prettyifyEventName([NSString stringWithFormat:@"%@", notification]);
-  [[JSController getInstance] runCallbacks:eventName
-                                   payload:[[JSApplicationWrapper alloc] initWithRunningApplication:[NSRunningApplication runningApplicationWithProcessIdentifier:[AccessibilityWrapper processIdentifierOfUIElement:element]] screenWrapper:[[ScreenWrapper alloc] init]]];
 }
 
 static void registerForWindowDeath(AXUIElementRef element, RunningApplications *ref) {
@@ -170,7 +156,6 @@ static void windowCallback(AXObserverRef observer, AXUIElementRef element, CFStr
     if (!windowsArr || CFArrayGetCount(windowsArr) == 0) return;
     if (oldWindowsInApp == nil || [oldWindowsInApp count] == 0) {
       windowCreated(currPID, element, ref);
-      runWindowJSCallbacks(element, notification);
       return;
     }
     // set up title counts
@@ -225,26 +210,22 @@ static void windowCallback(AXObserverRef observer, AXUIElementRef element, CFStr
             [[ref titleToWindow] setObject:windowsForTitle forKey:[windowInfo objectAtIndex:0]];
           }
           [ref pruneWindows];
-          runWindowJSCallbacks(element, notification);
           return;
         }
       }
     }
     [ref pruneWindows];
-    runWindowJSCallbacks(element, notification);
     return;
   }
 
   // Focus Changed, update windows
   if (CFStringCompare(notification, kAXFocusedWindowChangedNotification, 0) == kCFCompareEqualTo) {
     [ref pruneWindows];
-    runWindowJSCallbacks(element, notification);
     return;
   }
 
   // Window created, add to windows
   windowCreated(currPID, element, ref);
-  runWindowJSCallbacks(element, notification);
   SlateLogger(@">>> END %@ for %@", notification, [AccessibilityWrapper getRole:element]);
 }
 
@@ -424,16 +405,12 @@ static void windowCallback(AXObserverRef observer, AXUIElementRef element, CFStr
   [self bringAppToFront:activatedApp];
   [self pruneWindows];
   NSString *eventName = prettyifyEventName([notification name]);
-  [[JSController getInstance] runCallbacks:eventName
-                                   payload:[[JSApplicationWrapper alloc] initWithRunningApplication:activatedApp screenWrapper:[[ScreenWrapper alloc] init]]];
 }
 
 - (void)applicationDeactivated:(id)notification {
   SlateLogger(@"Deactivated: %@", [notification name]);
   NSRunningApplication *deactivatedApp = [[notification userInfo] objectForKey:NSWorkspaceApplicationKey];
   NSString *eventName = prettyifyEventName([notification name]);
-  [[JSController getInstance] runCallbacks:eventName
-                                   payload:[[JSApplicationWrapper alloc] initWithRunningApplication:deactivatedApp screenWrapper:[[ScreenWrapper alloc] init]]];
 }
 
 - (void)applicationLaunched:(id)notification {
@@ -489,8 +466,6 @@ static void windowCallback(AXObserverRef observer, AXUIElementRef element, CFStr
   [self bringAppToFront:launchedApp];
   [self pruneWindows];
   NSString *eventName = prettyifyEventName([notification name]);
-  [[JSController getInstance] runCallbacks:eventName
-                                   payload:[[JSApplicationWrapper alloc] initWithRunningApplication:launchedApp screenWrapper:[[ScreenWrapper alloc] init]]];
 }
 
 - (void)applicationKilled:(id)notification {
@@ -507,8 +482,6 @@ static void windowCallback(AXObserverRef observer, AXUIElementRef element, CFStr
   [self pruneWindows];
   [self bringAppToFront:[self currentApplication]];
   NSString *eventName = prettyifyEventName([notification name]);
-  [[JSController getInstance] runCallbacks:eventName
-                                   payload:[[JSApplicationWrapper alloc] initWithRunningApplication:app screenWrapper:[[ScreenWrapper alloc] init]]];
 }
 
 - (void)bringAppToFront:(NSRunningApplication *)app {

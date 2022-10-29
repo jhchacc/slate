@@ -25,21 +25,16 @@
 
 - (void)setUp
 {
-    [super setUp];
-
     // Set-up code here.
 }
 
 - (void)tearDown
 {
     // Tear-down code here.
-
-    [super tearDown];
 }
 
 - (void)testExample
 {
-    STAssertTrue(true, @"Unit tests are not implemented yet in SlateTests");
 }
 
 @end

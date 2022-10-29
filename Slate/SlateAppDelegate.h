@@ -22,9 +22,6 @@
 #import <Cocoa/Cocoa.h>
 
 @class SwitchOperation;
-@class SnapshotOperation;
-@class ActivateSnapshotOperation;
-@class DeleteSnapshotOperation;
 @class HintOperation;
 @class Binding;
 @class GridOperation;
@@ -32,66 +29,30 @@
 @interface SlateAppDelegate : NSObject <NSApplicationDelegate> {
 @private
   IBOutlet NSMenu *statusMenu;
-  NSMenuItem *activateSnapshotItem;
   NSMenuItem *launchOnLoginItem;
   IBOutlet NSWindow *windowInfo;
-  IBOutlet NSWindow *configHelper;
-  IBOutlet NSTextView *configHelperTextView;
   NSStatusItem *statusItem;
   NSWindowController *windowInfoController;
-  NSWindowController *configHelperController;
-  HintOperation *currentHintOperation;
-  GridOperation *currentGridOperation;
   Binding *currentSwitchBinding;
-  SnapshotOperation *menuSnapshotOperation;
-  SnapshotOperation *undoSnapshotOperation;
-  ActivateSnapshotOperation *menuActivateSnapshotOperation;
-  DeleteSnapshotOperation *undoDeleteSnapshotOperation;
-  NSInteger cmdTabBinding;
-  NSInteger cmdShiftTabBinding;
   NSMutableDictionary *modalHotKeyRefs;
   NSMutableDictionary *modalIdToKey;
   NSString *currentModalKey;
   NSMutableArray *currentModalHotKeyRefs;
-  BOOL hasUndoOperation;
 }
 
-@property HintOperation *currentHintOperation;
-@property GridOperation *currentGridOperation;
-@property Binding *currentSwitchBinding;
-@property SnapshotOperation *menuSnapshotOperation;
-@property SnapshotOperation *undoSnapshotOperation;
-@property ActivateSnapshotOperation *menuActivateSnapshotOperation;
-@property DeleteSnapshotOperation *undoDeleteSnapshotOperation;
-@property (assign) NSInteger cmdTabBinding;
-@property (assign) NSInteger cmdShiftTabBinding;
 @property NSMutableDictionary *modalHotKeyRefs;
 @property NSMutableDictionary *modalIdToKey;
 @property NSString *currentModalKey;
 @property NSMutableArray *currentModalHotKeyRefs;
-@property (assign) BOOL hasUndoOperation;
 
 
-- (IBAction)updateLaunchState;
-- (IBAction)relaunch;
 - (IBAction)currentWindowInfo;
-- (IBAction)configurationHelper;
 - (IBAction)aboutWindow;
 - (void)loadConfig;
 - (void)registerHotKeys;
-- (void)createSnapshotOperations;
-- (IBAction)takeSnapshot;
-- (IBAction)activateSnapshot;
-- (OSStatus)timerActivateBinding:(NSTimer *)timer;
 - (void)resetModalKey;
-- (OSStatus)activateBinding:(EventHotKeyID)hkCom isRepeat:(BOOL)isRepeat;
-- (BOOL)isInLoginItems;
-- (void)addToLoginItems;
-- (void)deleteFromLoginItems;
-- (void)setLaunchOnLoginItemStatus;
+- (OSStatus)activateBinding:(EventHotKeyID)eventKeyId;
 
 OSStatus OnHotKeyEvent(EventHandlerCallRef nextHandler, EventRef theEvent, void *userData);
-OSStatus OnHotKeyReleasedEvent(EventHandlerCallRef nextHandler, EventRef theEvent, void *userData);
-OSStatus OnModifiersChangedEvent(EventHandlerCallRef nextHandler, EventRef theEvent, void *userData);
 
 @end

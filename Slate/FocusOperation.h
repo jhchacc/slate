@@ -25,15 +25,11 @@
 @interface FocusOperation : Operation {
 @private
   NSInteger direction;
-  NSString *app;
 }
 
 @property (assign) NSInteger direction;
-@property NSString *app;
 
-- (id)initWithDirectionOrApp:(NSString *)s;
-
-+ (id)focusOperation;
-+ (id)focusOperationFromString:(NSString *)focusOperation;
+- (id)init:(NSString *)s;
++ (id)focusOperation:(NSString *)focusOperation;
 
 @end

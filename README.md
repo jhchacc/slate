@@ -290,18 +290,6 @@ Push the window to the edge of the screen: `push direction style`
 
     Will bind the keystroke alt-ctrl-uparrow to push the window so that it is aligned with the top of the screen
 
-##### nudge #####
-Nudge the window in any direction: `nudge x y`
-
-        x = amount to nudge x either as a percent or a hard value (+10% or -100)
-        y = amount to nudge y either as a percent or a hard value (+10% or -100)
-
-    Example:
-
-        bind left:ctrl,shift nudge -100 +0
-
-    Will bind the keystroke ctrl-shift-leftarrow to nudge the window `100` pixels to the left
-
 ##### throw #####
 Throw the window to any screen's origin: `throw screen style`
 
@@ -328,22 +316,6 @@ Move/Resize the window into a corner: `corner direction style`
         bind 1:ctrl corner top-left resize:screenSizeX/2;screenSizeY/2
 
     Will bind the keystroke ctrl-1 to move the window to the top-left corner and resize it to 1/4 of the screen
-
-##### shell #####
-Execute a shell command: `shell options 'command'`
-
-        command = (required) the command to run. note that it is a quoted string.
-        options = (optional) a space separated list of:
-                   wait  - block slate until the shell command exits. Useful when using shell commands in a
-                           sequence binding
-                   path: - the inital working directory to use when starting the command. For example
-                           path:~/code would set the inital working directory to ~/code
-
-    Example:
-
-        bind 1:ctrl wait path:~/code '/opt/local/bin/mvim'
-
-    Will bind the keystroke ctrl-1 to run the command `/opt/local/bin/mvim` with the current working directory of `~/code`. Slate will also block until the command is done. Note that you may **not** use the tilda home directory shortcut within the command itself, it is only allowed within the path.
 
 ##### hide #####
 Hide one or more applications: `hide applications`
@@ -399,43 +371,6 @@ Toggle one or more applications: `toggle applications`
 
     **Note:** If you specify current in this toggle operation it will not toggle properly because after the current application is hidden, it is no longer the current application anymore.
 
-##### chain #####
-Chain multiple operations to one binding: `chain opAndParams1 | opAndParams2 ...`
-
-        opAndParamsX = any operation string (except sequence, hint and grid)
-
-    Example:
-
-        bind 1:ctrl chain push up | push right | push down | push left
-
-    Will bind the keystroke ctrl-1 to push up on the first press, then push right on the second press, then push down on the third press, the push left on the fourth press and rotate back to pushing up on the fifth press (etc).
-
-##### sequence #####
-Activate a sequence of operations in one binding: `sequence opAndParams1 separator opAndParams 2 ...`
-
-        opAndParamsX = any of the above operation strings (except chain and grid. hint must be last if present)
-        separator = | or >. | will cause the next operation to be performed on the window focused at the time of
-                    execution of that operation, > will cause the next operation to be performed on the window
-                    focused at the start of the > chain.
-
-    Example:
-
-        bind 1:ctrl sequence focus right > push left | push right
-
-    Will bind the keystroke ctrl-1 to first focus the window to the right, then push the previously focused window to the left, then push the newly focused window to the right. Obviously Hint will ignore `>` and `|` and just display because it doesn't care which window was focused.
-
-
-##### layout #####
-Activate a layout: `layout name`
-
-        name = the name of the layout to activate (set using the layout directive)
-
-    Example:
-
-        bind 1:ctrl layout myLayout
-
-    Will bind the keystroke ctrl-l to activate the layout called `myLayout`. Note that the layout **must** be created before you bind it.
-
 ##### focus #####
 Focus a window in a direction or from an application: `focus direction|app`
 
@@ -451,118 +386,6 @@ Focus a window in a direction or from an application: `focus direction|app`
         bind 1:ctrl focus 'iTerm'
 
     Will bind the keystroke ctrl-1 to focus the main window of the application iTerm. The main window is the last focused window of that application.
-
-##### snapshot #####
-Create a snapshot of your current window locations: `snapshot name options`
-
-        name = the name of the snapshot to create (used in delete-snapshot and activate-snapshot)
-        options = (optional) a semicolon separated list of any of the following options:
-          save-to-disk -> saves the snapshot to disk so Slate will load it when it starts up next
-          stack -> treats this snapshot as stack so you can use this binding multiple times to push snapshots on the stack
-
-    Example:
-
-         bind 1:ctrl snapshot theName save-to-disk;stack
-
-    Will bind the keystroke ctrl-1 to create a snapshot called `theName`, save that snapshot to disk, and treat it as a stack so you can hit the keystroke multiple times to push snapshots onto the stack.
-
-    **Note:** There is a menu option to take a snapshot of the current screen configuration.
-
-##### delete-snapshot #####
-Delete a snapshot: `delete-snapshot name options`
-
-        name = the name of the snapshot to delete
-        options = (optional) a semicolon separated list of any of the following options:
-          all -> if the snapshot is a stack (if it isn't, this option is useless), this will delete all snapshots in the
-                 stack (if this option is not specified, the default is to only delete the top snapshot of the stack).
-
-    Example:
-
-        bind 1:ctrl delete-snapshot theName all
-
-    Will bind the keystroke ctrl-1 to delete the snapshot called `theName` if it exists. This will delete all instances of theName meaning if you have pushed multiple snapshots on the stack, it will completely clear them all.
-
-##### activate-snapshot #####
-Activate a snapshot: `activate-snapshot name options`
-
-        name = the name of the snapshot to activate
-        options = (optional) a semicolon separated list of any of the following options:
-          delete -> this will delete the snapshot after activating it (if the snapshot is a stack, it will pop the top
-                    snapshot off and keep the rest)
-
-    Example:
-
-        bind 1:ctrl activate-snapshot theName delete
-
-    Will bind the keystroke ctrl-1 to activate the snapshot called `theName` if it exists. This will also delete the snapshot (or pop it off the stack if the snapshot is a stack).
-
-    **Note:** There is a menu option to activate the snapshot that you may have created using the menu option.
-
-##### hint #####
-Show Window Hints (similar to Link Hints in Vimium except for Windows): `hint characters`
-
-        characters = (optional) a simple string of characters to be used for the hints. each hint consists of one
-                     character. if there are more windows than characters then some windows will not get hints.
-                     this string can contain any of the single character Allowed Keys. Letters may be upper case or
-                     lower case, but both will be bound to the lowercase letter for the hint. Using upper or lower
-                     case only changes how they are displayed. The default string of characters is
-                     "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-
-    Example:
-
-        bind 1:ctrl hint QWERTYUIOP
-
-    Will bind the keystroke ctrl-1 to show Window Hints using the letters `Q`, `W`, `E`, `R`, `T`, `Y`, `U`, `I`, `O`, and `P`.  This will show an overlay in the top-left corner of every window on screen containing one of those letters. While the overlays are showing, if one of those letters is pressed, the corresponding window will be focused. If there are more than 10 windows, some windows will not get hints. Pressing ESC will dismiss the hints.
-
-    **Note:** There are *tons* of config options to tweak this.
-
-##### grid #####
-Show a Grid to one-off resize and move windows: `grid options`
-
-        options is a whitespace separated list of:
-          padding:<integer> = the padding between cells
-          screenRef:width,height = width and height are integers specifying the width and height of the grid
-                                   (number of cells, not absolute size). screenRef is either the screenID or
-                                   screen resolution (widthxheight)
-
-    Example:
-
-        bind 1:ctrl grid padding:5 1680x1050:16,9 1050x1680:9,16
-
-    Will bind the keystroke ctrl-1 to show Grids on each screen. The default width and height are 12. This will set the padding between the cells to be 5. Also, this will change the width and height of the grid on the monitor with the resolution 1680x1050 to 16 and 9 respectively. For the monitor with the resolution 1050x1680, it will set the width to 9 and height to 16. If you have multiple monitors, the Grid that is on the same screen as your mouse pointer will be focused. If you want to use a grid on a different monitor you **must** click it first and then click+drag.
-
-    **Note:** There are a bunch of config options to tweak how this looks.
-
-##### relaunch #####
-Relaunch Slate: `relaunch`
-
-    Example:
-
-        bind 1:ctrl relaunch
-
-    Will bind the keystroke ctrl-1 to relaunch Slate. This will also reload the `.slate` file from scratch.
-
-##### undo #####
-Undo an Operation: `undo`
-
-    Example
-
-        bind 1:ctrl undo
-
-    Will bind the keystroke ctrl-1 to undo the last binding that was triggered. By default you can undo up to the last 10 commands. This can be changed using the `undoMaxStackSize` config. Also, you can only undo movement-based operations. Focus-related operations will not undo.
-
-##### switch #####
-\[Beta\] A Better Application Switcher: `switch`
-
-    If you bind any binding to cmd-tab or cmd-shift-tab, Slate will completely disable the default Mac OS X Application switcher!
-
-    Example:
-
-        bind tab:cmd switch
-
-    Will disable the default Mac OS X Application switcher and bind the keystroke cmd-tab to a better application switcher.
-
-     **Note:** There are *tons* of config options to tweak this.
 
 ### The `source` Directive ###
 

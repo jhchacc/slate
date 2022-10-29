@@ -28,67 +28,26 @@
 
 @implementation FocusOperation
 
-@synthesize direction, app;
+@synthesize direction;
 
-- (id)init {
+- (id)init:(NSString *)s {
   self = [super init];
-  if (self) {
-    [self setDirection:DIRECTION_UNKNOWN];
-    [self setApp:nil];
-  }
-  return self;
-}
-
-- (id)initWithDirectionOrApp:(NSString *)s {
-  self = [super init];
-  if (self) {
-    [self setDirection:DIRECTION_UNKNOWN];
-    [self setApp:nil];
-    if ([s length] <= 1) {
-      // fail
-    } else if ([s isEqualToString:UP] || [s isEqualToString:ABOVE]) {
-      [self setDirection:DIRECTION_UP];
-    } else if ([s isEqualToString:DOWN] || [s isEqualToString:BELOW]) {
-      [self setDirection:DIRECTION_DOWN];
-    } else if ([s isEqualToString:LEFT]) {
-      [self setDirection:DIRECTION_LEFT];
-    } else if ([s isEqualToString:RIGHT]) {
-      [self setDirection:DIRECTION_RIGHT];
-    } else if ([s isEqualToString:BEHIND]) {
-      [self setDirection:DIRECTION_BEHIND];
-    } else if ([[NSCharacterSet characterSetWithCharactersInString:QUOTES] characterIsMember:[s characterAtIndex:0]] &&
-               [[NSCharacterSet characterSetWithCharactersInString:QUOTES] characterIsMember:[s characterAtIndex:([s length] - 1)]]) {
-      // App name
-      [self setApp:[s substringWithRange:NSMakeRange(1, [s length]-2)]];
-    }
+  [self setDirection:DIRECTION_UNKNOWN];
+  if ([s isEqualToString:UP] || [s isEqualToString:ABOVE]) {
+    [self setDirection:DIRECTION_UP];
+  } else if ([s isEqualToString:DOWN] || [s isEqualToString:BELOW]) {
+    [self setDirection:DIRECTION_DOWN];
+  } else if ([s isEqualToString:LEFT]) {
+    [self setDirection:DIRECTION_LEFT];
+  } else if ([s isEqualToString:RIGHT]) {
+    [self setDirection:DIRECTION_RIGHT];
+  } else if ([s isEqualToString:BEHIND]) {
+    [self setDirection:DIRECTION_BEHIND];
   }
   return self;
 }
 
 - (BOOL)doOperation {
-  SlateLogger(@"----------------- Begin Focus Operation -----------------");
-  // We don't use the passed in AccessibilityWrapper or ScreenWrapper so they are nil. No need to waste time creating them here.
-  BOOL success = [self doOperationWithAccessibilityWrapper:nil screenWrapper:nil];
-  SlateLogger(@"-----------------  End Focus Operation  -----------------");
-  return success;
-}
-
-- (BOOL)doOperationWithAccessibilityWrapper:(AccessibilityWrapper *)iamnil screenWrapper:(ScreenWrapper *)iamalsonil {
-  [self evalOptionsWithAccessibilityWrapper:iamnil screenWrapper:iamalsonil];
-  // App case
-  if ([self app] != nil) {
-    for (NSRunningApplication *runningApp in [RunningApplications getInstance]) {
-      if ([[self app] isEqualToString:[runningApp localizedName]]) {
-        // Match!
-        if ([AccessibilityWrapper focusMainWindow:runningApp]) {
-          return YES;
-        }
-        return NO;
-      }
-    }
-    return NO;
-  }
-
   // Direction case
   AccessibilityWrapper *caAW = [[AccessibilityWrapper alloc] init];
   if (![caAW inited]) return NO;
@@ -187,55 +146,12 @@
 }
 
 - (BOOL)testOperation {
-  if ([self direction] == DIRECTION_UNKNOWN && [self app] == nil)
+  if ([self direction] == DIRECTION_UNKNOWN)
     @throw [NSException exceptionWithName:@"Unknown Direction" reason:@"direction" userInfo:nil];
   return YES;
 }
 
-- (NSString *)checkRequiredOptions:(NSDictionary *)_options {
-  if ([_options objectForKey:OPT_APP] == nil && [_options objectForKey:OPT_DIRECTION] == nil) {
-    return [[NSArray arrayWithObjects:OPT_APP, OPT_DIRECTION, nil] componentsJoinedByString:@" or "];
-  }
-  return nil;
-}
-
-- (void)parseOption:(NSString *)name value:(id)value {
-  if (value == nil) { return; }
-  if ([name isEqualToString:OPT_APP]) {
-    // should be string
-    if (![value isKindOfClass:[NSString class]]) {
-      @throw([NSException exceptionWithName:@"Invalid App" reason:[NSString stringWithFormat:@"Invalid App %@", value] userInfo:nil]);
-      return;
-    }
-    [self setApp:value];
-  } else if ([name isEqualToString:OPT_DIRECTION]) {
-    // should be a string
-    if (![value isKindOfClass:[NSString class]]) {
-      @throw([NSException exceptionWithName:@"Invalid Direction" reason:[NSString stringWithFormat:@"Invalid Direction %@", value] userInfo:nil]);
-      return;
-    }
-    if ([value isEqualToString:UP] || [value isEqualToString:ABOVE]) {
-      [self setDirection:DIRECTION_UP];
-    } else if ([value isEqualToString:DOWN] || [value isEqualToString:BELOW]) {
-      [self setDirection:DIRECTION_DOWN];
-    } else if ([value isEqualToString:LEFT]) {
-      [self setDirection:DIRECTION_LEFT];
-    } else if ([value isEqualToString:RIGHT]) {
-      [self setDirection:DIRECTION_RIGHT];
-    } else if ([value isEqualToString:BEHIND]) {
-      [self setDirection:DIRECTION_BEHIND];
-    } else {
-      @throw([NSException exceptionWithName:@"Invalid Direction" reason:[NSString stringWithFormat:@"Invalid Direction %@", value] userInfo:nil]);
-      return;
-    }
-  }
-}
-
-+ (id)focusOperation {
-  return [[FocusOperation alloc] init];
-}
-
-+ (id)focusOperationFromString:(NSString *)focusOperation {
++ (id)focusOperation:(NSString *)focusOperation {
   // focus direction
   NSMutableArray *tokens = [[NSMutableArray alloc] initWithCapacity:10];
   [StringTokenizer tokenize:focusOperation into:tokens maxTokens:2];
@@ -245,7 +161,7 @@
     @throw([NSException exceptionWithName:@"Invalid Parameters" reason:[NSString stringWithFormat:@"Invalid Parameters in '%@'. Focus operations require the following format: 'focus direction'", focusOperation] userInfo:nil]);
   }
 
-  Operation *op = [[FocusOperation alloc] initWithDirectionOrApp:[tokens objectAtIndex:1]];
+  Operation *op = [[FocusOperation alloc] init:[tokens objectAtIndex:1]];
   return op;
 }
 
